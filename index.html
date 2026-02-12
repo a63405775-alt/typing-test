@@ -2,64 +2,128 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Treasure Hunt Game</title>
+<title>Ludo Game</title>
 <style>
-  body { font-family: Arial; text-align: center; background: #e0f7fa; }
-  #game { margin: 20px auto; display: grid; grid-template-columns: repeat(5, 60px); grid-gap: 5px; }
-  .cell { width: 60px; height: 60px; background: #80deea; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: bold; font-size: 24px; }
-  .found { background: gold; }
-  #score { margin-top: 20px; font-size: 20px; }
-  #reset { margin-top: 10px; padding: 5px 10px; }
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f1f1f1;
+}
+h1 { margin-top: 20px; }
+#board {
+  display: grid;
+  grid-template-columns: repeat(15, 40px);
+  grid-template-rows: repeat(15, 40px);
+  margin: 20px auto;
+  width: 600px;
+  height: 600px;
+  border: 2px solid #333;
+}
+.cell {
+  border: 1px solid #aaa;
+  box-sizing: border-box;
+  width: 40px;
+  height: 40px;
+  position: relative;
+}
+.home-red { background: #ff8a80; }
+.home-green { background: #a5d6a7; }
+.home-yellow { background: #fff59d; }
+.home-blue { background: #81d4fa; }
+.token {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  color: #fff;
+}
+#controls { margin-top: 20px; }
+button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
+#diceResult { font-size: 20px; font-weight: bold; margin-top: 10px; }
 </style>
 </head>
 <body>
 
-<h1>Treasure Hunt Game</h1>
-<p>Click the cells to find the treasure!</p>
-<div id="game"></div>
-<div id="score">Score: 0</div>
-<button id="reset">Reset Game</button>
+<h1>Ludo Game (2 Players)</h1>
+<div id="board"></div>
+
+<div id="controls">
+  <button id="rollDice">Roll Dice</button>
+  <div id="diceResult">Dice: -</div>
+  <div id="turnInfo">Red's Turn</div>
+</div>
 
 <script>
-// JavaScript part (game logic)
-const gridSize = 25;
-const gameContainer = document.getElementById('game');
-const scoreDisplay = document.getElementById('score');
-let score = 0;
+// Ludo simplified 2-player setup
+const board = document.getElementById('board');
+const diceResult = document.getElementById('diceResult');
+const turnInfo = document.getElementById('turnInfo');
+const rollDice = document.getElementById('rollDice');
 
-// Load score from localStorage (like SQL)
-if(localStorage.getItem('treasureScore')) {
-    score = parseInt(localStorage.getItem('treasureScore'));
-    scoreDisplay.textContent = "Score: " + score;
+const cells = [];
+for(let i=0;i<225;i++){
+  const cell = document.createElement('div');
+  cell.classList.add('cell');
+  board.appendChild(cell);
+  cells.push(cell);
 }
 
-// Place treasure randomly
-const treasureIndex = Math.floor(Math.random() * gridSize);
+// Simplified positions (just demo path)
+// Player tokens
+const players = {
+  red: { positions: [-1,-1,-1,-1], color: 'red' },
+  green: { positions: [-1,-1,-1,-1], color: 'green' }
+};
 
-// Create grid
-for(let i=0; i<gridSize; i++){
-    const cell = document.createElement('div');
-    cell.classList.add('cell');
-    cell.dataset.index = i;
-    cell.addEventListener('click', function(){
-        if(i == treasureIndex){
-            cell.classList.add('found');
-            alert('You found the treasure!');
-            score += 10;
-            localStorage.setItem('treasureScore', score); // save score
-            scoreDisplay.textContent = "Score: " + score;
-        } else {
-            cell.style.background = '#b2ebf2';
-        }
-    });
-    gameContainer.appendChild(cell);
-}
+let turn = 'red';
+let dice = 0;
 
-// Reset button
-document.getElementById('reset').addEventListener('click', function(){
-    localStorage.removeItem('treasureScore');
-    location.reload();
+// Roll dice function
+rollDice.addEventListener('click', () => {
+  dice = Math.floor(Math.random()*6)+1;
+  diceResult.textContent = "Dice: "+dice;
 });
+
+// Move token
+function moveToken(player,color,index){
+  if(players[player].positions[index] === -1 && dice===6){
+    players[player].positions[index]=0;
+  } else if(players[player].positions[index] >= 0){
+    players[player].positions[index] += dice;
+  } else {
+    alert("Roll 6 to enter the board!");
+    return;
+  }
+  drawTokens();
+  turn = (turn==='red') ? 'green':'red';
+  turnInfo.textContent = (turn==='red') ? "Red's Turn":"Green's Turn";
+}
+
+// Draw tokens
+function drawTokens(){
+  cells.forEach(c=>c.innerHTML='');
+  for(let p in players){
+    players[p].positions.forEach((pos,i)=>{
+      if(pos>=0 && pos<cells.length){
+        const token = document.createElement('div');
+        token.classList.add('token');
+        token.style.backgroundColor = players[p].color;
+        token.textContent = i+1;
+        token.addEventListener('click', ()=> moveToken(p,players[p].color,i));
+        cells[pos].appendChild(token);
+      }
+    });
+  }
+}
+
+drawTokens();
 </script>
 
 </body>
