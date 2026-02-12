@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>4 Player Ludo</title>
+<title>Real Ludo Game</title>
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   text-align: center;
   background: #f0f0f0;
 }
 h1 { margin: 20px 0; }
+
 #board {
   display: grid;
   grid-template-columns: repeat(15, 40px);
@@ -20,6 +21,7 @@ h1 { margin: 20px 0; }
   border: 2px solid #333;
   position: relative;
 }
+
 .cell {
   border: 1px solid #aaa;
   box-sizing: border-box;
@@ -27,6 +29,16 @@ h1 { margin: 20px 0; }
   height: 40px;
   position: relative;
 }
+
+/* Player Home Colors */
+.home-red { background: #ff4d4d; }
+.home-green { background: #4dff4d; }
+.home-yellow { background: #ffff4d; }
+.home-blue { background: #4d4dff; }
+
+/* Safe zone highlight */
+.safe { border: 3px solid #fff; }
+
 .token {
   width: 30px;
   height: 30px;
@@ -42,11 +54,47 @@ h1 { margin: 20px 0; }
   cursor: pointer;
   z-index: 10;
 }
+
+/* Player colors */
 .red { background: red; }
 .green { background: green; }
 .yellow { background: yellow; }
 .blue { background: blue; }
-#controls { margin-top: 20px; }
+
+/* Dice container */
+#diceContainer {
+  perspective: 1000px;
+  width: 80px;
+  height: 80px;
+  margin: 20px auto;
+}
+#dice {
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+  transition: transform 1s;
+  position: relative;
+}
+.face {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: white;
+  border: 2px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+.face1 { transform: rotateY(0deg) translateZ(40px); }
+.face2 { transform: rotateY(180deg) translateZ(40px); }
+.face3 { transform: rotateX(90deg) translateZ(40px); }
+.face4 { transform: rotateX(-90deg) translateZ(40px); }
+.face5 { transform: rotateY(90deg) translateZ(40px); }
+.face6 { transform: rotateY(-90deg) translateZ(40px); }
+
+#controls { margin-top: 10px; }
 button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
 #diceResult { font-size: 20px; font-weight: bold; margin-top: 10px; }
 #turnInfo { font-size: 18px; margin-top: 5px; }
@@ -54,8 +102,20 @@ button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
 </head>
 <body>
 
-<h1>4 Player Ludo</h1>
+<h1>Real Ludo Game</h1>
 <div id="board"></div>
+
+<div id="diceContainer">
+  <div id="dice">
+    <div class="face face1">1</div>
+    <div class="face face2">2</div>
+    <div class="face face3">3</div>
+    <div class="face face4">4</div>
+    <div class="face face5">5</div>
+    <div class="face face6">6</div>
+  </div>
+</div>
+
 <div id="controls">
   <button id="rollDice">Roll Dice</button>
   <div id="diceResult">Dice: -</div>
@@ -73,27 +133,31 @@ for(let i=0;i<225;i++){
   cells.push(cell);
 }
 
-// Players
+// Players setup
 const players = {
-  red: { color: 'red', positions: [-1,-1,-1,-1], home: [0,1,14,15], start: 0 },
-  green: { color: 'green', positions: [-1,-1,-1,-1], home: [210,211,224,225], start: 56 },
-  yellow: { color: 'yellow', positions: [-1,-1,-1,-1], home: [210,211,224,225], start: 112 },
-  blue: { color: 'blue', positions: [-1,-1,-1,-1], home: [0,1,14,15], start: 168 }
+  red: { color: 'red', positions: [-1,-1,-1,-1], start: 0 },
+  green: { color: 'green', positions: [-1,-1,-1,-1], start: 56 },
+  yellow: { color: 'yellow', positions: [-1,-1,-1,-1], start: 112 },
+  blue: { color: 'blue', positions: [-1,-1,-1,-1], start: 168 }
 };
 
-let turnOrder = ['red','green','yellow','blue'];
+const turnOrder = ['red','green','yellow','blue'];
 let turnIndex = 0;
 let dice = 0;
 
 const diceResult = document.getElementById('diceResult');
 const turnInfo = document.getElementById('turnInfo');
 const rollDice = document.getElementById('rollDice');
+const diceEl = document.getElementById('dice');
 
-// Roll Dice
-rollDice.addEventListener('click', ()=>{
+// Dice roll animation
+function rollDice3D(){
   dice = Math.floor(Math.random()*6)+1;
+  let x = 360*Math.floor(Math.random()*4);
+  let y = 360*Math.floor(Math.random()*4);
+  diceEl.style.transform = `rotateX(${x + (dice===3?180:0)}deg) rotateY(${y + (dice===5?180:0)}deg)`;
   diceResult.textContent = "Dice: " + dice;
-});
+}
 
 // Move token
 function moveToken(player,index){
@@ -129,6 +193,9 @@ function drawTokens(){
 }
 
 drawTokens();
+
+// Roll dice button
+rollDice.addEventListener('click', rollDice3D);
 </script>
 
 </body>
