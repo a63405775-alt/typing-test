@@ -2,208 +2,65 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pro Typing Test</title>
-
+<title>Treasure Hunt Game</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.container {
-  background: white;
-  width: 800px;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-h1 {
-  margin-bottom: 10px;
-}
-
-#quote {
-  font-size: 18px;
-  margin: 20px 0;
-  text-align: left;
-}
-
-.correct {
-  color: green;
-}
-
-.incorrect {
-  color: red;
-  text-decoration: underline;
-}
-
-textarea {
-  width: 100%;
-  height: 100px;
-  font-size: 16px;
-  padding: 10px;
-}
-
-.stats {
-  margin-top: 15px;
-  display: flex;
-  justify-content: space-between;
-}
-
-button {
-  margin-top: 15px;
-  padding: 10px 20px;
-  border: none;
-  background: #667eea;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-button:hover {
-  background: #5a67d8;
-}
+  body { font-family: Arial; text-align: center; background: #e0f7fa; }
+  #game { margin: 20px auto; display: grid; grid-template-columns: repeat(5, 60px); grid-gap: 5px; }
+  .cell { width: 60px; height: 60px; background: #80deea; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: bold; font-size: 24px; }
+  .found { background: gold; }
+  #score { margin-top: 20px; font-size: 20px; }
+  #reset { margin-top: 10px; padding: 5px 10px; }
 </style>
-  <style>
-.navbar {
-    background: #111;
-    padding: 15px;
-}
-
-.navbar button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 18px;
-    margin-right: 20px;
-    cursor: pointer;
-}
-
-.section {
-    display: none;
-    padding: 20px;
-}
-
-.active {
-    display: block;
-}
-</style>
-
 </head>
-
 <body>
 
-<div class="container">
-  <h1>Professional Typing Test</h1>
-  <p>Time: <span id="timer">60</span> sec</p>
-  <div id="quote"></div>
-  <textarea id="input" placeholder="Start typing here..."></textarea>
-
-  <div class="stats">
-    <div>WPM: <span id="wpm">0</span></div>
-    <div>Accuracy: <span id="accuracy">0</span>%</div>
-  </div>
-
-  <button onclick="restartTest()">Restart</button>
-</div>
+<h1>Treasure Hunt Game</h1>
+<p>Click the cells to find the treasure!</p>
+<div id="game"></div>
+<div id="score">Score: 0</div>
+<button id="reset">Reset Game</button>
 
 <script>
+// JavaScript part (game logic)
+const gridSize = 25;
+const gameContainer = document.getElementById('game');
+const scoreDisplay = document.getElementById('score');
+let score = 0;
 
-const quotes = [
-Perfect! 😎 Chaliye next level me real Ludo game banane ka setup dekhte hain. Main aapko step-by-step “Next Level Ludo Game” banane ka plan bata raha hoon, jisme dice, board, tokens, aur rules sab properly handle honge.
-];
-
-let timer = 60;
-let interval = null;
-let started = false;
-
-const quoteElement = document.getElementById("quote");
-const inputElement = document.getElementById("input");
-const timerElement = document.getElementById("timer");
-const wpmElement = document.getElementById("wpm");
-const accuracyElement = document.getElementById("accuracy");
-
-function loadQuote() {
-  const random = quotes[Math.floor(Math.random() * quotes.length)];
-  quoteElement.innerHTML = random.split("").map(char => `<span>${char}</span>`).join("");
+// Load score from localStorage (like SQL)
+if(localStorage.getItem('treasureScore')) {
+    score = parseInt(localStorage.getItem('treasureScore'));
+    scoreDisplay.textContent = "Score: " + score;
 }
 
-function startTimer() {
-  interval = setInterval(() => {
-    timer--;
-    timerElement.innerText = timer;
-    if(timer <= 0){
-      clearInterval(interval);
-      inputElement.disabled = true;
-    }
-  }, 1000);
+// Place treasure randomly
+const treasureIndex = Math.floor(Math.random() * gridSize);
+
+// Create grid
+for(let i=0; i<gridSize; i++){
+    const cell = document.createElement('div');
+    cell.classList.add('cell');
+    cell.dataset.index = i;
+    cell.addEventListener('click', function(){
+        if(i == treasureIndex){
+            cell.classList.add('found');
+            alert('You found the treasure!');
+            score += 10;
+            localStorage.setItem('treasureScore', score); // save score
+            scoreDisplay.textContent = "Score: " + score;
+        } else {
+            cell.style.background = '#b2ebf2';
+        }
+    });
+    gameContainer.appendChild(cell);
 }
 
-inputElement.addEventListener("input", () => {
-
-  if(!started){
-    started = true;
-    startTimer();
-  }
-
-  const quoteSpans = quoteElement.querySelectorAll("span");
-  const typed = inputElement.value.split("");
-
-  let correct = 0;
-
-  quoteSpans.forEach((span, index) => {
-    if(typed[index] == null){
-      span.classList.remove("correct");
-      span.classList.remove("incorrect");
-    }
-    else if(typed[index] === span.innerText){
-      span.classList.add("correct");
-      span.classList.remove("incorrect");
-      correct++;
-    } else {
-      span.classList.add("incorrect");
-      span.classList.remove("correct");
-    }
-  });
-
-  const wpm = Math.round((correct / 5) / (60 - timer) * 60);
-  wpmElement.innerText = wpm > 0 ? wpm : 0;
-
-  const accuracy = Math.round((correct / typed.length) * 100);
-  accuracyElement.innerText = accuracy > 0 ? accuracy : 0;
+// Reset button
+document.getElementById('reset').addEventListener('click', function(){
+    localStorage.removeItem('treasureScore');
+    location.reload();
 });
-
-function restartTest(){
-  clearInterval(interval);
-  timer = 60;
-  started = false;
-  inputElement.disabled = false;
-  inputElement.value = "";
-  timerElement.innerText = timer;
-  wpmElement.innerText = 0;
-  accuracyElement.innerText = 0;
-  loadQuote();
-}
-
-loadQuote();
-
 </script>
-<a href="https://wa.me/919205975600?text=Hello%20I%20want%20typing%20certificate" 
-   target="_blank" 
-   style="display:inline-block; padding:12px 20px; background-color:green; color:white; text-decoration:none; border-radius:8px; font-size:16px;">
-   Contact on WhatsApp
-</a>
 
-</body>
-</html>
-</script>
 </body>
 </html>
