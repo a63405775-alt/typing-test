@@ -1,61 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Typing Test Tool</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Typing Test</title>
+
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.container {
+  background: white;
+  width: 800px;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
   text-align: center;
-  background: #f4f4f4;
-  padding: 20px;
 }
-#text {
-  font-size: 20px;
-  margin: 20px;
+
+h1 {
+  margin-bottom: 10px;
 }
+
+#quote {
+  font-size: 18px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+  text-decoration: underline;
+}
+
 textarea {
-  width: 80%;
+  width: 100%;
   height: 100px;
-  font-size: 18px;
+  font-size: 16px;
+  padding: 10px;
 }
+
+.stats {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
 button {
+  margin-top: 15px;
   padding: 10px 20px;
-  font-size: 18px;
-  margin-top: 10px;
+  border: none;
+  background: #667eea;
+  color: white;
+  font-size: 16px;
   cursor: pointer;
+  border-radius: 5px;
 }
-#result {
-  margin-top: 20px;
-  font-size: 20px;
-  font-weight: bold;
+
+button:hover {
+  background: #5a67d8;
 }
 </style>
 </head>
+
 <body>
 
-<h1>Typing Test</h1>
+<div class="container">
+  <h1>Professional Typing Test</h1>
+  <p>Time: <span id="timer">60</span> sec</p>
+  <div id="quote"></div>
+  <textarea id="input" placeholder="Start typing here..."></textarea>
 
-<div id="text">
-The quick brown fox jumps over the lazy dog.
+  <div class="stats">
+    <div>WPM: <span id="wpm">0</span></div>
+    <div>Accuracy: <span id="accuracy">0</span>%</div>
+  </div>
+
+  <button onclick="restartTest()">Restart</button>
 </div>
 
-<textarea id="input" placeholder="Start typing here..."></textarea>
-<br>
-<button onclick="checkTyping()">Submit</button>
-
-<div id="result"></div>
-
 <script>
-function checkTyping() {
-  var originalText = document.getElementById("text").innerText;
-  var userText = document.getElementById("input").value;
-  
-  if(userText.trim() === originalText.trim()){
-    document.getElementById("result").innerHTML = "✅ Perfect Typing!";
-  } else {
-    document.getElementById("result").innerHTML = "❌ Not matched. Try again!";
-  }
+
+const quotes = [
+  "Typing speed is an essential skill in the modern digital world.",
+  "Practice every day to improve your typing accuracy and speed.",
+  "Success comes to those who are consistent and determined.",
+  "Professional developers type fast and think faster."
+];
+
+let timer = 60;
+let interval = null;
+let started = false;
+
+const quoteElement = document.getElementById("quote");
+const inputElement = document.getElementById("input");
+const timerElement = document.getElementById("timer");
+const wpmElement = document.getElementById("wpm");
+const accuracyElement = document.getElementById("accuracy");
+
+function loadQuote() {
+  const random = quotes[Math.floor(Math.random() * quotes.length)];
+  quoteElement.innerHTML = random.split("").map(char => `<span>${char}</span>`).join("");
 }
+
+function startTimer() {
+  interval = setInterval(() => {
+    timer--;
+    timerElement.innerText = timer;
+    if(timer <= 0){
+      clearInterval(interval);
+      inputElement.disabled = true;
+    }
+  }, 1000);
+}
+
+inputElement.addEventListener("input", () => {
+
+  if(!started){
+    started = true;
+    startTimer();
+  }
+
+  const quoteSpans = quoteElement.querySelectorAll("span");
+  const typed = inputElement.value.split("");
+
+  let correct = 0;
+
+  quoteSpans.forEach((span, index) => {
+    if(typed[index] == null){
+      span.classList.remove("correct");
+      span.classList.remove("incorrect");
+    }
+    else if(typed[index] === span.innerText){
+      span.classList.add("correct");
+      span.classList.remove("incorrect");
+      correct++;
+    } else {
+      span.classList.add("incorrect");
+      span.classList.remove("correct");
+    }
+  });
+
+  const wpm = Math.round((correct / 5) / (60 - timer) * 60);
+  wpmElement.innerText = wpm > 0 ? wpm : 0;
+
+  const accuracy = Math.round((correct / typed.length) * 100);
+  accuracyElement.innerText = accuracy > 0 ? accuracy : 0;
+});
+
+function restartTest(){
+  clearInterval(interval);
+  timer = 60;
+  started = false;
+  inputElement.disabled = false;
+  inputElement.value = "";
+  timerElement.innerText = timer;
+  wpmElement.innerText = 0;
+  accuracyElement.innerText = 0;
+  loadQuote();
+}
+
+loadQuote();
+
 </script>
 
 </body>
