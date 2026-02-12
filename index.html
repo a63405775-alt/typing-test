@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Typing Test Tool</title>
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: #f4f4f4;
+  padding: 20px;
+}
+#text {
+  font-size: 20px;
+  margin: 20px;
+}
+textarea {
+  width: 80%;
+  height: 100px;
+  font-size: 18px;
+}
+button {
+  padding: 10px 20px;
+  font-size: 18px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+#result {
+  margin-top: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h1>Typing Test</h1>
+
+<div id="text">
+The quick brown fox jumps over the lazy dog.
+</div>
+
+<textarea id="input" placeholder="Start typing here..."></textarea>
+<br>
+<button onclick="checkTyping()">Submit</button>
+
+<div id="result"></div>
+
+<script>
+function checkTyping() {
+  var originalText = document.getElementById("text").innerText;
+  var userText = document.getElementById("input").value;
+  
+  if(userText.trim() === originalText.trim()){
+    document.getElementById("result").innerHTML = "✅ Perfect Typing!";
+  } else {
+    document.getElementById("result").innerHTML = "❌ Not matched. Try again!";
+  }
+}
+</script>
+
+</body>
+</html>
