@@ -11,6 +11,7 @@ body {
 }
 h1 { margin: 20px 0; }
 
+/* Board */
 #board {
   display: grid;
   grid-template-columns: repeat(15, 40px);
@@ -21,24 +22,22 @@ h1 { margin: 20px 0; }
   border: 2px solid #333;
   position: relative;
 }
-
 .cell {
-  border: 1px solid #aaa;
-  box-sizing: border-box;
   width: 40px;
   height: 40px;
+  border: 1px solid #aaa;
+  box-sizing: border-box;
   position: relative;
 }
-
-/* Player Home Colors */
+/* Home colors */
 .home-red { background: #ff4d4d; }
 .home-green { background: #4dff4d; }
 .home-yellow { background: #ffff4d; }
 .home-blue { background: #4d4dff; }
-
-/* Safe zone highlight */
+/* Safe zones */
 .safe { border: 3px solid #fff; }
 
+/* Tokens */
 .token {
   width: 30px;
   height: 30px;
@@ -54,38 +53,28 @@ h1 { margin: 20px 0; }
   cursor: pointer;
   z-index: 10;
 }
-
-/* Player colors */
 .red { background: red; }
 .green { background: green; }
 .yellow { background: yellow; }
 .blue { background: blue; }
 
-/* Dice container */
-#diceContainer {
-  perspective: 1000px;
-  width: 80px;
-  height: 80px;
-  margin: 20px auto;
-}
+/* Dice 3D */
+#diceContainer { perspective: 1000px; width: 80px; height: 80px; margin: 20px auto; }
 #dice {
-  width: 80px;
-  height: 80px;
+  width: 80px; height: 80px;
   transform-style: preserve-3d;
   transition: transform 1s;
   position: relative;
 }
 .face {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 80px; height: 80px;
   background: white;
   border: 2px solid #333;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 24px;
-  font-weight: bold;
+  font-size: 24px; font-weight: bold;
 }
 .face1 { transform: rotateY(0deg) translateZ(40px); }
 .face2 { transform: rotateY(180deg) translateZ(40px); }
@@ -98,6 +87,7 @@ h1 { margin: 20px 0; }
 button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
 #diceResult { font-size: 20px; font-weight: bold; margin-top: 10px; }
 #turnInfo { font-size: 18px; margin-top: 5px; }
+#winner { font-size: 24px; margin-top: 10px; color: #e91e63; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -120,6 +110,7 @@ button { padding: 10px 15px; margin: 5px; font-size: 16px; cursor: pointer; }
   <button id="rollDice">Roll Dice</button>
   <div id="diceResult">Dice: -</div>
   <div id="turnInfo">Red's Turn</div>
+  <div id="winner"></div>
 </div>
 
 <script>
@@ -133,12 +124,12 @@ for(let i=0;i<225;i++){
   cells.push(cell);
 }
 
-// Players setup
+// Players with 4 gotiyan each
 const players = {
-  red: { color: 'red', positions: [-1,-1,-1,-1], start: 0 },
-  green: { color: 'green', positions: [-1,-1,-1,-1], start: 56 },
-  yellow: { color: 'yellow', positions: [-1,-1,-1,-1], start: 112 },
-  blue: { color: 'blue', positions: [-1,-1,-1,-1], start: 168 }
+  red: { color:'red', positions: [-1,-1,-1,-1], start: 0, finished: 0 },
+  green: { color:'green', positions: [-1,-1,-1,-1], start: 13*4, finished:0 },
+  yellow: { color:'yellow', positions: [-1,-1,-1,-1], start: 13*8, finished:0 },
+  blue: { color:'blue', positions: [-1,-1,-1,-1], start: 13*12, finished:0 }
 };
 
 const turnOrder = ['red','green','yellow','blue'];
@@ -149,8 +140,9 @@ const diceResult = document.getElementById('diceResult');
 const turnInfo = document.getElementById('turnInfo');
 const rollDice = document.getElementById('rollDice');
 const diceEl = document.getElementById('dice');
+const winnerDiv = document.getElementById('winner');
 
-// Dice roll animation
+// 3D Dice roll
 function rollDice3D(){
   dice = Math.floor(Math.random()*6)+1;
   let x = 360*Math.floor(Math.random()*4);
@@ -161,16 +153,38 @@ function rollDice3D(){
 
 // Move token
 function moveToken(player,index){
+  if(winnerDiv.textContent) return; // game over
   let pos = players[player].positions[index];
   if(pos===-1 && dice===6){
     players[player].positions[index] = players[player].start;
   } else if(pos>=0){
     players[player].positions[index] += dice;
-    if(players[player].positions[index] > 51) players[player].positions[index] -= 52; // Loop board
+    if(players[player].positions[index] >= 52) players[player].positions[index] -= 52; // loop board
   } else {
     alert("Roll 6 to enter token!");
     return;
   }
+
+  // Token cut logic
+  for(let p in players){
+    if(p!==player){
+      players[p].positions.forEach((otherPos,i)=>{
+        if(otherPos===players[player].positions[index]){
+          players[p].positions[i] = -1; // send back home
+          alert(`${player.toUpperCase()} cut ${p.toUpperCase()}!`);
+        }
+      });
+    }
+  }
+
+  // Check finish
+  if(players[player].positions[index]===players[player].start && dice===6){
+    players[player].finished +=1;
+    if(players[player].finished===4){
+      winnerDiv.textContent = `${player.toUpperCase()} WINS! 🎉`;
+    }
+  }
+
   drawTokens();
   turnIndex = (turnIndex+1)%4;
   turnInfo.textContent = turnOrder[turnIndex].charAt(0).toUpperCase()+turnOrder[turnIndex].slice(1) + "'s Turn";
@@ -193,8 +207,6 @@ function drawTokens(){
 }
 
 drawTokens();
-
-// Roll dice button
 rollDice.addEventListener('click', rollDice3D);
 </script>
 
